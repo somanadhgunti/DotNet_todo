@@ -2,19 +2,26 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy project files
+# Copy solution and project files
+COPY ["TodoManagementAPI.sln", "."]
 COPY ["TodoManagementAPI.csproj", "."]
 COPY ["TodoManagementAPI.Core/TodoManagementAPI.Core.csproj", "TodoManagementAPI.Core/"]
 COPY ["TodoManagementAPI.Data/TodoManagementAPI.Data.csproj", "TodoManagementAPI.Data/"]
 
-# Restore dependencies
+# Copy source code (but not tests)
+COPY ["Program.cs", "."]
+COPY ["appsettings*.json", "."]
+COPY ["Controllers/", "Controllers/"]
+COPY ["Models/", "Models/"]
+COPY ["Properties/", "Properties/"]
+COPY ["TodoManagementAPI.Core/", "TodoManagementAPI.Core/"]
+COPY ["TodoManagementAPI.Data/", "TodoManagementAPI.Data/"]
+
+# Restore dependencies for API project only
 RUN dotnet restore "TodoManagementAPI.csproj"
 
-# Copy all source code
-COPY . .
-
-# Build the project
-RUN dotnet build "TodoManagementAPI.csproj" -c Release -o /app/build
+# Build the API project only (not tests)
+RUN dotnet build "TodoManagementAPI.csproj" -c Release -o /app/build --no-restore
 
 # Publish stage
 FROM build AS publish
